@@ -8,7 +8,7 @@ def hello():
 def record_data():
   content = request.json
   print(content)
-  return None, 204
+  return "", 204
 
 if __name__ == "__main__":
   app.run(host = "0.0.0.0", port = 8080)

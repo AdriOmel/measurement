@@ -11,7 +11,6 @@
 
 DHT dht(DHTPIN, DHT22);  
 
-// Server parameters
 const char* server = "data-measurement.onrender.com"; 
 const int port = 443; 
 int status = WL_IDLE_STATUS;
@@ -22,6 +21,8 @@ char pass[] = SECRET_PASS;
 unsigned long time = 0;
 const unsigned long interval = 10000;
 
+String MAC;
+
 WiFiSSLClient client;
 
 void printWiFiStatus();
@@ -31,6 +32,7 @@ int read_humidity();
 float read_temperature();
 void send_measurements(float temperatureDHT, int humidity);
 void wait_http_response();
+String get_mac();
 
 void setup() {
   Serial.begin(9600);  
@@ -57,7 +59,7 @@ void setup() {
 
     delay(10000);
   }
-
+  MAC = get_mac();
   printWiFiStatus();
 
 }
@@ -133,10 +135,22 @@ float read_temperature()
   return temperatureDHT;
 }
 
-void send_measurements(float temperatureDHT, int humidity){
-  String payload = "{\"humidity\":" + String(humidity) + ",\"temperature\":" + String(temperatureDHT) + "}";
+void send_measurements(String type, float value){
+  String payload = "{\"mac\":\"" + MAC + "\",\"type\":\"" + type + "\",\"value\":" + String(value) + "}";
   send_http_request(payload);
   wait_http_response();
+}
+
+String get_mac() {
+  uint8_t mac[6];
+  WiFi.macAddress(mac);
+
+  String mac_string;
+  for (int i = 0; i < 6; i++){
+    mac_string += String(mac[i], HEX);
+    if (i < 5) mac_string += ":";
+  }
+  return mac_string;
 }
 
 void wait_http_response(){
@@ -152,6 +166,7 @@ void loop() {
     time = millis();
     int humidity = read_humidity();
     float temperature = read_temperature();
-    send_measurements(temperature, humidity);
+    send_measurements("humidity", humidity);
+    send_measurements("temperature", temperature);
   }
 }
