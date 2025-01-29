@@ -13,7 +13,7 @@ def record_data():
   if not sensor:
     sensor = db.add_sensor(content['mac'], content['type'])
   sensor = sensor[0]
-  result = db.add_measurements(sensor['id'], content['sensor_value'], sensor['correction'])
+  result = db.add_measurements(sensor['id'], content['value'], sensor['correction'])
   return jsonify(result), 201
 
 if __name__ == "__main__":
