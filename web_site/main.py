@@ -1,4 +1,6 @@
-from flask import Flask, request
+import db
+from flask import Flask, request, jsonify
+
 app = Flask(__name__)
 @app.route("/")
 def hello():
@@ -7,9 +9,12 @@ def hello():
 @app.route("/update", methods = ["POST"])
 def record_data():
   content = request.json
-  print(content)
-  return "", 204
+  sensor = db.check_sensor(content['mac'], content['type'])
+  if not sensor:
+    sensor = db.add_sensor(content['mac'], content['type'])
 
+  result = db.add_measurements(sensor['id'], content['sensor_value'], sensor['correction'])
+  return jsonify(result), 201
 
 if __name__ == "__main__":
   app.run(host = "0.0.0.0", port = 8080)
