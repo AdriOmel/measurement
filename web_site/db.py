@@ -1,5 +1,6 @@
 import os
 import psycopg2
+import psycopg2.extras
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,28 +12,29 @@ def get_db_connection():
                             password=os.environ['DB_PASSWORD'])
     return conn
 
-def create_table():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute(
-    '''CREATE TABLE measurments (
-        temperature     float4,
-        humidity        int,
-        datetime        timestamptz
-    );''')
-    conn.commit()
-    cur.close()
-    conn.close() 
+def add_sensor(mac, sensor_type) -> list[dict]:
+    sql = '''INSERT INTO Sensors(mac_adress, sensor_type) VALUES(%s, %s) RETURNING *;''',
+    result = execute_query(sql, mac, sensor_type)
+    return result
+     
+def check_sensor(mac, sensor_type) -> list[dict]:
+    sql = '''SELECT * FROM Sensors WHERE (mac_adress=%s AND sensor_type=%s);'''
+    result = execute_query(sql, mac, sensor_type)
+    return result   
 
-def print_table():
+def add_measurements(sensor_id, sensor_value, correction) -> list[dict]:
+    sql = '''INSERT INTO Measurments(sensor_id, sensor_value, correction) VALUES(%s, %s, %s) RETURNING *;'''
+    result = execute_query(sql, sensor_id, sensor_value, correction)
+    return result
+
+def execute_query(sql, *args) -> list[dict]:
     conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute(
-    '''SELECT * FROM pg_catalog.pg_tables WHERE tablename LIKE '%measurments%';''')
-    result = cur.fetchall()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute(sql, args)
+    rows = cur.fetchall()
+    result = [dict(row) for row in rows]
+    conn.commit()
     print(result)
     cur.close()
     conn.close() 
-
-create_table()
-print_table()
+    return result
