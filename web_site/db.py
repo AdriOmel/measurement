@@ -13,7 +13,7 @@ def get_db_connection():
     return conn
 
 def add_sensor(mac:str, sensor_type:str) -> list[dict]:
-    sql = '''INSERT INTO Sensors(mac_adress, sensor_type) VALUES(%s, %s) RETURNING *;''',
+    sql = '''INSERT INTO Sensors(mac_adress, sensor_type) VALUES(%s, %s) RETURNING *;'''
     result = execute_query(sql, mac, sensor_type)
     return result
      
