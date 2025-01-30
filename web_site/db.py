@@ -40,6 +40,11 @@ def execute_query(sql:str, *args) -> list[dict]:
     return result
 
 def get_measurements(sensor_type:str, mac_address:str):
-    sql = '''SELECT sensor_value, datetime FROM measurments JOIN sensors ON (sensors.id=sensor_id) WHERE sensor_type=%s AND mac_adress=%s;'''
+    sql = '''SELECT sensor_value-measurments.correction as sensor_value, datetime FROM measurments JOIN sensors ON (sensors.id=sensor_id) WHERE sensor_type=%s AND mac_adress=%s;'''
     result = execute_query(sql, sensor_type, mac_address)
     return result
+
+def update_sensor(correction:float, sensor_location:str, units:str, id:int) -> dict:
+    sql = '''UPDATE sensors SET correction=%s, sensor_location=%s, units=%s WHERE id=%s RETURNING *;'''
+    result = execute_query(sql, correction, sensor_location, units, id)
+    return result[0]

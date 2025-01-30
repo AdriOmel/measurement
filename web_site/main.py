@@ -1,12 +1,16 @@
 import db
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect, url_for
 
 app = Flask(__name__)
 @app.route("/")
 def home():
   last_measurement_temp, values_temp, labels_temp = get_data('temperature', 'c0:4e:30:13:68:a8')
   last_measurement_hum, values_hum, labels_hum = get_data('humidity', 'c0:4e:30:13:68:a8')
-  return render_template("graph.html", labels_temp=labels_temp, labels_hum=labels_hum, values_temp=values_temp, values_hum=values_hum, last_measurement_temp=last_measurement_temp, last_measurement_hum=last_measurement_hum)
+  sensor_temp = db.check_sensor('c0:4e:30:13:68:a8', 'temperature')[0]
+  sensor_hum = db.check_sensor('c0:4e:30:13:68:a8', 'humidity')[0]
+  return render_template("graph.html", labels_temp=labels_temp, labels_hum=labels_hum, values_temp=values_temp, values_hum=values_hum, 
+                         last_measurement_temp=last_measurement_temp, last_measurement_hum=last_measurement_hum,
+                           sensor_temp=sensor_temp, sensor_hum=sensor_hum)
 def get_data(sensor_type, mac):
   data = db.get_measurements(sensor_type, mac)
   last_measurement = data[-1]['sensor_value']
@@ -24,5 +28,11 @@ def record_data():
   result = db.add_measurements(sensor['id'], content['value'], sensor['correction'])
   return jsonify(result), 201
 
+@app.route("/sensor/update", methods = ["POST"])
+def update_sensor():
+  db.update_sensor(request.form['correction'], request.form['sensor_location'], request.form['units'], request.form['id'])
+  return redirect(url_for('home'))
+
 if __name__ == "__main__":
-  app.run(host = "0.0.0.0", port = 8080)
+  app.run(host = "0.0.0.0", port = 8080, debug=True)
+
