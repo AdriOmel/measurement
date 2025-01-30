@@ -38,3 +38,8 @@ def execute_query(sql:str, *args) -> list[dict]:
     cur.close()
     conn.close() 
     return result
+
+def get_measurements(sensor_type:str, mac_address:str):
+    sql = '''SELECT sensor_value, datetime FROM measurments JOIN sensors ON (sensors.id=sensor_id) WHERE sensor_type=%s AND mac_adress=%s;'''
+    result = execute_query(sql, sensor_type, mac_address)
+    return result
