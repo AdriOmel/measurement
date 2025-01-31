@@ -40,7 +40,14 @@ def execute_query(sql:str, *args) -> list[dict]:
     return result
 
 def get_measurements(sensor_type:str, mac_address:str) -> list[dict]:
-    sql = '''SELECT sensor_value+correction as sensor_value, datetime FROM measurments JOIN sensors ON (sensors.id=sensor_id) WHERE sensor_type=%s AND mac_adress=%s;'''
+    sql = '''WITH latest_entries AS (
+        SELECT sensor_value+correction as sensor_value, datetime 
+        FROM measurments JOIN sensors ON (sensors.id=sensor_id)
+        WHERE sensor_type=%s AND mac_adress=%s
+        ORDER BY datetime DESC
+        LIMIT 50)
+        SELECT * FROM latest_entries
+        ORDER BY datetime ASC;'''
     result = execute_query(sql, sensor_type, mac_address)
     return result
 
