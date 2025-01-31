@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Sensors data</title>
+        <style>
+            .main-container {
+                display: flex;
+                justify-content: space-between;
+            }
+            .charts-container {
+                width: 70%;
+            }
+            .form-container {
+                width: 25%;
+            }
+            .form-group {
+                margin-bottom: 20px;
+            }
+
+        </style>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    </head>
+    <body>
+        <div class="main-container">
+            <div class="charts-container">
+                {{last_measurement_temp | safe}}
+                <canvas id="temp_chart" width="900" height="400"></canvas>
+            </div>
+            <div class="form-container">
+                <form action="/sensor/update" method="POST">
+                    <div class="form-group">
+                        <label>ID</label>
+                        <input type="text" name="id" value={{sensor_temp['id'] | safe}} readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>MAC</label>
+                        <input type="text" name="mac_adress" value={{sensor_temp['mac_adress'] | safe}} readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Type</label>
+                        <input type="text" name="sensor_type" value={{sensor_temp['sensor_type'] | safe}} readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Location</label>
+                        <input type="text" name="sensor_location" value="{{sensor_temp['sensor_location'] | safe}}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Correction</label>
+                        <input type="number" name="correction" value={{sensor_temp['correction'] | safe}} step="0.1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Units</label>
+                        <input type="text" name="units" value={{sensor_temp['units'] | safe}} required>
+                    </div>
+                    <button type="submit">Submit</button>
+                </form>
+            </div>
+        </div>
+        <div class="main-container">
+            <div class="charts-container">
+                {{last_measurement_hum | safe}}
+                <canvas id="hum_chart" width="900" height="400"></canvas>
+            </div>
+            <div class="form-container">
+                <form action="/sensor/update" method="POST">
+                    <div class="form-group">
+                        <label>ID</label>
+                        <input type="text" name="id" value={{sensor_hum['id'] | safe}} readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>MAC</label>
+                        <input type="text" name="mac_adress" value={{sensor_hum['mac_adress'] | safe}} readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Type</label>
+                        <input type="text" name="sensor_type" value={{sensor_hum['sensor_type'] | safe}} readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Location</label>
+                        <input type="text" name="sensor_location" value="{{sensor_hum['sensor_location'] | safe}}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Correction</label>
+                        <input type="number" name="correction" value={{sensor_hum['correction'] | safe}} step="0.1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Units</label>
+                        <input type="text" name="units" value={{sensor_hum['units'] | safe}} required>
+                    </div>
+                    <button type="submit">Submit</button>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            var ctx = document.getElementById("temp_chart").getContext("2d");
+            var history_data_temp_chart = new Chart(ctx,{
+                type: "line",
+                data:{
+                    labels: [],
+                    datasets:[
+                        {
+                        data: [],
+                        fill: false,
+                        borderColor: "rgb(75, 192, 192)",
+                        tension: 0.1
+                        }
+                    ]
+                },
+                options:{
+                    responsive: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '°C' 
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Temperature history'
+                        }
+                    }
+                }
+            });
+            var ctx = document.getElementById("hum_chart").getContext("2d");
+            var history_data_hum = new Chart(ctx,{
+                type: "line",
+                data:{
+                    labels: {{labels_hum | safe}},
+                    datasets:[
+                        {
+                        data: {{values_hum | safe}},
+                        fill: false,
+                        borderColor: "rgb(75, 192, 192)",
+                        tension: 0.1
+                        }
+                    ]
+                },
+                options:{
+                    responsive: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '%' 
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Humidity history'
+                        }
+                    }
+                }
+            });
+
+            function update_data(){
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', '/measurements/get', false)
+                xhr.send();
+                var data = JSON.parse(xhr.responseText)
+                history_data_temp_chart.data.labels = data.labels
+                history_data_temp_chart.data.datasets[0].data = data.values
+                history_data_temp_chart.update();
+            }
+            setInterval(update_data, 5000)
+        </script>
+    </body>
+</html>

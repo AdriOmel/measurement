@@ -23,7 +23,7 @@ def check_sensor(mac:str, sensor_type:str) -> list[dict]:
     return result   
 
 def add_measurements(sensor_id:int, sensor_value:float) -> dict:
-    sql = '''INSERT INTO Measurments(sensor_id, sensor_value) VALUES(%s, %s, %s) RETURNING *;'''
+    sql = '''INSERT INTO Measurments(sensor_id, sensor_value) VALUES(%s, %s) RETURNING *;'''
     result = execute_query(sql, sensor_id, sensor_value)
     return result[0]
 
