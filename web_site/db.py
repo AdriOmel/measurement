@@ -45,7 +45,7 @@ def get_measurements(sensor_type:str, mac_address:str) -> list[dict]:
         FROM measurments JOIN sensors ON (sensors.id=sensor_id)
         WHERE sensor_type=%s AND mac_adress=%s
         ORDER BY datetime DESC
-        LIMIT 50)
+        LIMIT 25)
         SELECT * FROM latest_entries
         ORDER BY datetime ASC;'''
     result = execute_query(sql, sensor_type, mac_address)
