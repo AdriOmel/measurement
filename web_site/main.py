@@ -11,12 +11,6 @@ def home():
   sensor_hum = db.check_sensor(MAC, 'humidity')[0]
   return render_template("online_graph.html", sensor_temp=sensor_temp, sensor_hum=sensor_hum, MAC=MAC)
 
-def get_data(sensor_type, mac):
-  data = db.get_measurements(sensor_type, mac)
-  last_measurement = data[-1]['sensor_value']
-  values = [row['sensor_value'] for row in data]
-  labels = [row['datetime'].strftime('%d-%m-%Y %H:%M:%S') for row in data]
-  return last_measurement, values, labels
 
 @app.route("/update", methods = ["POST"])
 def record_data():
@@ -35,9 +29,11 @@ def update_sensor():
 
 @app.route("/measurements/get")
 def get_masurements():
-  measurements = get_data(request.args.get('sensor_type'), request.args.get('mac_address'))
-  result = {"last_measurement":measurements[0], "values":measurements[1], "labels":measurements[2]}
-  return jsonify(result)
+  data = db.get_measurements(request.args.get('sensor_type'),  request.args.get('mac_address'))
+  last_measurement = data[-1]['sensor_value']
+  values = [row['sensor_value'] for row in data]
+  labels = [row['datetime'].strftime('%d-%m-%Y %H:%M:%S') for row in data]
+  return jsonify({"last_measurement":last_measurement, "values":values, "labels":labels})
 
 if __name__ == "__main__":
   app.run(host = "0.0.0.0", port = 8080, debug=True)
