@@ -7,13 +7,10 @@ MAC = os.environ['MAC_ADDRESS']
 app = Flask(__name__)
 @app.route("/")
 def home():
-  last_measurement_temp, values_temp, labels_temp = get_data('temperature', MAC)
-  last_measurement_hum, values_hum, labels_hum = get_data('humidity', MAC)
   sensor_temp = db.check_sensor(MAC, 'temperature')[0]
   sensor_hum = db.check_sensor(MAC, 'humidity')[0]
-  return render_template("graph.html", labels_temp=labels_temp, labels_hum=labels_hum, values_temp=values_temp, values_hum=values_hum, 
-                         last_measurement_temp=last_measurement_temp, last_measurement_hum=last_measurement_hum,
-                           sensor_temp=sensor_temp, sensor_hum=sensor_hum)
+  return render_template("online_graph.html", sensor_temp=sensor_temp, sensor_hum=sensor_hum, MAC=MAC)
+
 def get_data(sensor_type, mac):
   data = db.get_measurements(sensor_type, mac)
   last_measurement = data[-1]['sensor_value']
@@ -38,20 +35,9 @@ def update_sensor():
 
 @app.route("/measurements/get")
 def get_masurements():
-  measurements = get_data("temperature", MAC)
+  measurements = get_data(request.args.get('sensor_type'), request.args.get('mac_address'))
   result = {"last_measurement":measurements[0], "values":measurements[1], "labels":measurements[2]}
   return jsonify(result)
-
-@app.route("/test")
-def test():
-  data = get_masurements()
-  last_measurement_hum, values_hum, labels_hum = get_data('humidity', MAC)
-  sensor_temp = db.check_sensor(MAC, 'temperature')[0]
-  sensor_hum = db.check_sensor(MAC, 'humidity')[0]
-  return render_template("online_graph.html", labels_hum=labels_hum, values_hum=values_hum, last_measurement_hum=last_measurement_hum,
-                           sensor_temp=sensor_temp, sensor_hum=sensor_hum, data=data)
-
-
 
 if __name__ == "__main__":
   app.run(host = "0.0.0.0", port = 8080, debug=True)

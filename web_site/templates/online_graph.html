@@ -25,7 +25,7 @@
     <body>
         <div class="main-container">
             <div class="charts-container">
-                {{last_measurement_temp | safe}}
+                <div id="last_temp"></div>
                 <canvas id="temp_chart" width="900" height="400"></canvas>
             </div>
             <div class="form-container">
@@ -60,7 +60,7 @@
         </div>
         <div class="main-container">
             <div class="charts-container">
-                {{last_measurement_hum | safe}}
+                <div id="last_hum"></div>
                 <canvas id="hum_chart" width="900" height="400"></canvas>
             </div>
             <div class="form-container">
@@ -129,13 +129,13 @@
                 }
             });
             var ctx = document.getElementById("hum_chart").getContext("2d");
-            var history_data_hum = new Chart(ctx,{
+            var history_data_hum_chart = new Chart(ctx,{
                 type: "line",
                 data:{
-                    labels: {{labels_hum | safe}},
+                    labels: [],
                     datasets:[
                         {
-                        data: {{values_hum | safe}},
+                        data: [],
                         fill: false,
                         borderColor: "rgb(75, 192, 192)",
                         tension: 0.1
@@ -162,16 +162,22 @@
                 }
             });
 
-            function update_data(){
+            function update_data(sensor_type, mac_address, chart, last_data_id){
                 var xhr = new XMLHttpRequest();
-                xhr.open('GET', '/measurements/get', false)
+                xhr.open('GET', '/measurements/get?sensor_type='+ sensor_type +'&mac_address='+ mac_address, false)
                 xhr.send();
                 var data = JSON.parse(xhr.responseText)
-                history_data_temp_chart.data.labels = data.labels
-                history_data_temp_chart.data.datasets[0].data = data.values
-                history_data_temp_chart.update();
+                var div=document.getElementById(last_data_id)
+                div.innerText=data.last_measurement
+                chart.data.labels = data.labels
+                chart.data.datasets[0].data = data.values
+                
+                chart.update();
             }
-            setInterval(update_data, 5000)
+            update_data('temperature', '{{MAC}}', history_data_temp_chart, 'last_temp')
+            update_data('humidity', '{{MAC}}', history_data_hum_chart, 'last_hum')
+            setInterval(update_data, 5000, 'temperature', '{{MAC}}', history_data_temp_chart, 'last_temp')
+            setInterval(update_data, 5000, 'humidity', '{{MAC}}', history_data_hum_chart, 'last_hum')
         </script>
     </body>
 </html>
